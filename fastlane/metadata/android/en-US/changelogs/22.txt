@@ -1,0 +1,2 @@
+* Add Polish fastlane translations thanks to Marcin Mikołajczak
+* Add Brazilian Portuguese fastlane translations thanks to @ruanon
