@@ -1,2 +1,3 @@
 # GMapsWebView
-GoogleMaps WebView
+
+Forked from https://gitlab.com/divested-mobile/maps
