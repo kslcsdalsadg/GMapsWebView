@@ -216,24 +216,12 @@ public class MainActivity extends Activity {
                 return null;
             }
 
-            private boolean processMapsAppGooGlRedirect(WebResourceRequest request) {
-                try {
-                    Pattern pattern = Pattern.compile("^intent://maps\\.app\\.goo\\.gl/.+;S.browser_fallback_url=([^;]+);");
-                    Matcher matcher = pattern.matcher(request.getUrl().toString());
-                    if (matcher.find()) {
-                        mapsWebView.loadUrl(URLDecoder.decode(matcher.group(1), StandardCharsets.UTF_8.toString()));
-                        return true;
-                    }
-                }
-                catch (UnsupportedEncodingException e) {
-                    Log.d(TAG, "[UnsupportedEncodingException] " + request.getUrl().toString());
-                }
-                return false;
-            }
-
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 if (processMapsAppGooGlRedirect(request)) {
+                    return true;
+                }
+                if (processGoogleRedirectUrl(request)) {
                     return true;
                 }
                 if (request.getUrl().toString().equals("about:blank")) {
@@ -403,22 +391,13 @@ public class MainActivity extends Activity {
 
     private LocationListener getNewLocationListener() {
         return new LocationListener() {
-            @Override
-            public void onLocationChanged(android.location.Location location) {
-            }
+            public void onLocationChanged(android.location.Location location) {}
 
-            @Deprecated
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
 
-            @Override
-            public void onProviderEnabled(String provider) {
-            }
+            public void onProviderEnabled(String provider) {}
 
-            @Override
-            public void onProviderDisabled(String provider) {
-            }
+            public void onProviderDisabled(String provider) {}
         };
     }
 
@@ -430,24 +409,62 @@ public class MainActivity extends Activity {
         locationListenerGPS = null;
     }
 
+    private void openUri(Uri uri) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (ActivityNotFoundException ignored) {
+            Toast.makeText(context, R.string.no_app_installed, Toast.LENGTH_SHORT).show();
+        }
+    }
     private void initShareLinkListener() {
         ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         clipboard.addPrimaryClipChangedListener(new ClipboardManager.OnPrimaryClipChangedListener() {
-            @Override
             public void onPrimaryClipChanged() {
-                String url = mapsWebView.getUrl();
-                String regex = "@(-?d*\\d+.\\d+),(-?d*\\d+.\\d+)";
-                Pattern p = Pattern.compile(regex);
-                Matcher m = p.matcher(url);
-                if (m.find()) {
-                    String latlon = m.group(1) + "," + m.group(2);
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + latlon + "?q=" + latlon)));
-                    } catch (ActivityNotFoundException ignored) {
-                        Toast.makeText(context, R.string.no_app_installed, Toast.LENGTH_SHORT).show();
-                    }
+                Pattern pattern = Pattern.compile("@(-?d*\\d+.\\d+),(-?d*\\d+.\\d+)");
+                Matcher matcher = pattern.matcher(mapsWebView.getUrl());
+                if (matcher.find()) {
+                    String lat_lon = matcher.group(1) + "," + matcher.group(2);
+                    openUri(Uri.parse("geo:" + lat_lon + "?q=" + lat_lon));
                 }
             }
         });
     }
+
+    private boolean processMapsAppGooGlRedirect(WebResourceRequest request) {
+        try {
+            final Pattern pattern = Pattern.compile("^intent://maps\\.app\\.goo\\.gl/.+;S.browser_fallback_url=([^;]+);");
+            final Matcher matcher = pattern.matcher(request.getUrl().toString());
+            if (matcher.find()) {
+                mapsWebView.loadUrl(URLDecoder.decode(matcher.group(1), StandardCharsets.UTF_8.toString()));
+                return true;
+            }
+        }
+        catch (UnsupportedEncodingException e) {
+            Log.d(TAG, "[UnsupportedEncodingException] " + request.getUrl().toString());
+        }
+        return false;
+    }
+
+    private boolean processGoogleRedirectUrl(WebResourceRequest request) {
+        final Pattern pattern = Pattern.compile("^https://www\\.google\\.com/url\\?url=([^&]+)&");
+        final Matcher matcher = pattern.matcher(request.getUrl().toString());
+        if (matcher.find()) {
+            try {
+                String url = URLDecoder.decode(matcher.group(1), StandardCharsets.UTF_8.toString());
+                AlertDialog.Builder dialog_builder = new AlertDialog.Builder(this);
+                dialog_builder.setMessage(getString(R.string.open_url_in_external_browser, url)).setNegativeButton(getString(R.string.no), (DialogInterface.OnClickListener) null).setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        openUri(Uri.parse(url));
+                    };
+                });
+                dialog_builder.show();
+            }
+            catch (UnsupportedEncodingException e) {
+                Log.d(TAG, "[UnsupportedEncodingException] " + request.getUrl().toString());
+            }
+            return true;
+        }
+        return false;
+    }
 }
+

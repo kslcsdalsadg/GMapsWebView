@@ -5,4 +5,7 @@
     <string name="text_location_permission">Please grant location permission and press button again.</string>
     <string name="error_no_gps">Please activate GPS</string>
     <string name="no_app_installed">No app installed</string>
+    <string name="open_url_in_external_browser">\"%s\"\nwill open in an external browser.\n\nContinue?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

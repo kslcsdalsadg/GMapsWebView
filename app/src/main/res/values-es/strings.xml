@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">GMaps WV</string>
+    <string name="intent_string">Abierta en vista web restringida</string>
+    <string name="title_location_permission">Permiso de ubicación</string>
+    <string name="text_location_permission">Por favor, permita el acceso a la ubicación y pulse el botón de nuevo.</string>
+    <string name="error_no_gps">Por favor, active la localización</string>
+    <string name="no_app_installed">Ninguna app instalada</string>
+    <string name="open_url_in_external_browser">\"%s\"\nse abrirá en un navegador externo.\n\n¿Continuar?</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+</resources>
